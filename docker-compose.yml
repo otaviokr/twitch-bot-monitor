@@ -1,0 +1,118 @@
+version: "3.9"
+services:
+  elasticsearch:
+    image: elasticsearch:7.14.1
+    expose:
+      - 9200
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    # volumes:
+    #   - "./elasticsearch/data:/usr/share/elasticsearch/data"
+    environment:
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - botnet
+
+  fluent-bit:
+    image: fluent/fluent-bit:1.8
+    # command: "/fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf"
+    ports:
+      - "24224:24224/tcp"
+      - "24224:24224/udp"
+      - "2020:2020"
+    volumes:
+      - ./fluent-bit/etc:/fluent-bit/etc
+    environment:
+      IMAGE_NAME: "twitch-bot-monitor"
+      ES_INDEX: "twitch-bot-monitor"
+    # logging:
+    #   driver: "fluentd"
+    #   options:
+    #     tag: "twitch-bot-monitor/fluent-bit"
+    #     fluentd-address: "localhost:24224"
+    #     # fluentd-async: "true"
+    depends_on:
+      - elasticsearch
+    networks:
+      - botnet
+
+  kibana:
+    image: kibana:7.14.1
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_URL: "http://elasticseach:9200"
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    depends_on:
+      - elasticsearch
+    networks:
+      - botnet
+
+  jaeger:
+    image: "jaegertracing/all-in-one:1.26"
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: ":9411"
+    networks:
+      - botnet
+
+  prometheus:
+    image: "prom/prometheus"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    logging:
+      driver: "fluentd"
+      options:
+        tag: "twitch-bot-monitor/prometheus"
+        fluentd-address: "localhost:24224"
+        # fluentd-async: "true"
+    depends_on:
+      - "jaeger"
+    networks:
+      - botnet
+
+  grafana:
+    image: grafana/grafana
+    # Be sure to use the correct UID.
+    user: '1000'
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/logs:/var/log/grafana
+    environment:
+      GF_LOG_MODE: "console file"
+      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource"
+    logging:
+      driver: "fluentd"
+      options:
+        tag: "twitch-bot-monitor/grafana"
+        fluentd-address: "localhost:24224"
+        # fluentd-async: "true"
+    depends_on:
+      - "prometheus"
+    networks:
+      - botnet
+
+networks:
+  botnet:

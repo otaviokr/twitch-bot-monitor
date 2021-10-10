@@ -1,0 +1,27 @@
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+    monitor: 'twitchbot-monitor'
+
+scrape_configs:
+  # Monitors Prometheus itself
+  - job_name: 'prometheus'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Monitors the Twitch bot
+  - job_name: 'botavio_kr'
+    static_configs:
+      - targets: ['bot:2112']
+
+  # Monitors Fluent bit
+  - job_name: 'fluent-bit'
+    static_configs:
+      - targets: ['fluent-bit:2021']

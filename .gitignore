@@ -1,0 +1,5 @@
+/fluent-bit/etc/*
+!/fluent-bit/etc/fluent-bit.conf.template
+
+/grafana/data
+/grafana/logs
