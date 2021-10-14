@@ -9,19 +9,45 @@ global:
 scrape_configs:
   # Monitors Prometheus itself
   - job_name: 'prometheus'
-
-    # Override the global default and scrape targets from this job every 5 seconds.
     scrape_interval: 5s
-
     static_configs:
       - targets: ['localhost:9090']
 
-  # Monitors the Twitch bot
-  - job_name: 'botavio_kr'
+  # node exporter
+  - job_name: 'node'
     static_configs:
-      - targets: ['bot:2112']
+    - targets: ['node-exporter:9100']
+
+  # Redis exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets:
+        - redis://localhost:6379
+    metrics_path: /scrape
+    relabel_configs:
+      - source_labels: [ __address__ ]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 172.17.0.1:9122
+
+  # Redis-exporter exporter
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['172.17.0.1:9122']
+
+  # OBS exporter
+  - job_name: 'obs-studio'
+    static_configs:
+      - targets: ['172.17.0.1:9407']
+
+  # # # Monitors the Twitch bot
+  # # - job_name: 'botavio_kr'
+  # #   static_configs:
+  # #     - targets: ['172.17.0.1:2112']
 
   # Monitors Fluent bit
   - job_name: 'fluent-bit'
     static_configs:
-      - targets: ['fluent-bit:2021']
+      - targets: ['fluent-bit:2021', '172.17.0.1:2022', '172.17.0.1:2023']

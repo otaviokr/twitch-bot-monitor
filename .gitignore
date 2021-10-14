@@ -3,3 +3,6 @@
 
 /grafana/data
 /grafana/logs
+
+/portainer/data/*
+!/portainer/data/.gitkeep
