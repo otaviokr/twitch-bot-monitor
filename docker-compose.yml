@@ -26,6 +26,13 @@ services:
     networks:
       - botnet
 
+  speedtest-exporter:
+    image: stefanwalther/speedtest-exporter
+    expose:
+      - 9696
+    networks:
+      - botnet
+
   elasticsearch:
     image: elasticsearch:7.14.1
     expose:

@@ -18,6 +18,13 @@ scrape_configs:
     static_configs:
     - targets: ['node-exporter:9100']
 
+  # internet speed
+  - job_name: 'internet-speed'
+    scrape_interval: 15m
+    scrape_timeout: 60s
+    static_configs:
+    - targets: ['speedtest-exporter:9696', '192.168.0.20:9696']
+
   # Redis exporter
   - job_name: 'redis'
     static_configs:
@@ -47,7 +54,7 @@ scrape_configs:
   # #   static_configs:
   # #     - targets: ['172.17.0.1:2112']
 
-  # Monitors Fluent bit
-  - job_name: 'fluent-bit'
-    static_configs:
-      - targets: ['fluent-bit:2021', '172.17.0.1:2022', '172.17.0.1:2023']
+  # # Monitors Fluent bit
+  # - job_name: 'fluent-bit'
+  #   static_configs:
+  #     - targets: ['fluent-bit:2021', '172.17.0.1:2022', '172.17.0.1:2023']
